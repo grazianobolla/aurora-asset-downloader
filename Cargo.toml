@@ -8,3 +8,10 @@ reqwest = { version = "0.13.1", features = ["blocking", "json"] }
 serde = { version = "1.0.228", features = ["derive"] }
 bytes = "1.11.0"
 thiserror = "2.0.17"
+
+[profile.release]
+opt-level = "z"        # Optimize for size
+lto = "fat"            # Best size reduction (slower compile)
+codegen-units = 1      # Better optimization
+panic = "abort"        # Removes unwinding code
+strip = true           # Strip symbols (Rust 1.64+)
