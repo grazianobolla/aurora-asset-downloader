@@ -5,6 +5,7 @@ use std::{env, fs, path::Path};
 
 const URL: &str = "https://www.xboxunity.net/Resources/Lib";
 const MIN_FILE_SIZE: u64 = 1024 * 24;
+
 fn get_cover_id(title_id: &str) -> Result<String, errors::AppError> {
     let url = format!("{}/CoverInfo.php?titleid={}", URL, title_id);
     let res: models::CoversResponse = reqwest::blocking::get(url)?.json()?;
@@ -54,6 +55,20 @@ fn get_directory_folders<P: AsRef<Path>>(path: P) -> Result<Vec<String>, errors:
         .collect()
 }
 
+fn find_large_file_inside_folder(
+    folder_path: &str,
+    threshold: u64,
+) -> Result<bool, errors::AppError> {
+    Ok(fs::read_dir(&folder_path)?
+        .filter_map(Result::ok)
+        .any(|entry| {
+            entry
+                .metadata()
+                .map(|m| m.file_type().is_file() && m.len() > threshold)
+                .unwrap_or(false)
+        }))
+}
+
 fn filter_directories(
     gamedata_path: &str,
     full_directories: Vec<String>,
@@ -62,16 +77,8 @@ fn filter_directories(
 
     for dir in full_directories {
         let folder_path = format!("{}/{}/", gamedata_path, dir);
-        let has_large_file = fs::read_dir(&folder_path)?
-            .filter_map(Result::ok)
-            .any(|entry| {
-                entry
-                    .metadata()
-                    .map(|m| m.file_type().is_file() && m.len() > MIN_FILE_SIZE)
-                    .unwrap_or(false)
-            });
 
-        if !has_large_file {
+        if !find_large_file_inside_folder(&folder_path, MIN_FILE_SIZE)? {
             result.push(dir);
         }
     }
