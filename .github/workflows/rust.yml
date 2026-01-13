@@ -2,7 +2,7 @@ name: Rust Build
 
 on:
   release:
-    types: [ created ]
+    types: [created]
 
 jobs:
   build:
@@ -30,8 +30,6 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
 
       - name: Build (release)
         run: cargo build --release
@@ -39,17 +37,14 @@ jobs:
       - name: Run tests
         run: cargo test
 
-        # Upload binaries
-      - name: Upload Linux binary
+      - name: Upload Linux binary to release
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: softprops/action-gh-release@v2
         with:
-          name: myapp-linux
-          path: target/release/aurora-asset-downloader
+          files: target/release/aurora-asset-downloader
 
-      - name: Upload Windows binary
+      - name: Upload Windows binary to release
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: softprops/action-gh-release@v2
         with:
-          name: myapp-windows
-          path: target/release/aurora-asset-downloader.exe
+          files: target/release/aurora-asset-downloader.exe

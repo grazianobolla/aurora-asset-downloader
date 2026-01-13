@@ -29,3 +29,5 @@
 debug/
 target/debug/
 target/release/
+
+.idea/
